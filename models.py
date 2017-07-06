@@ -12,6 +12,7 @@ class Book(Base):
     title = Column(String, nullable=False)
     author = Column(String)
     genre = Column(String)
+    synopsis = Column(String)
 
 engine = create_engine('sqlite:///books.db')
 

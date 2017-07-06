@@ -1,0 +1,11 @@
+{% extends "main.html" %}
+{% block content %}
+  <div class="row">
+    <aside class="col-md-4">
+      <ul>
+      {% for category in categories %}
+        <li> <strong> {{ category }} </strong> </li>
+      {% endfor %}
+      </ul>
+    </aside>
+  </div>
