@@ -3,9 +3,17 @@
   <div class="row">
     <aside class="col-md-4">
       <ul>
-      {% for category in categories %}
-        <li> <strong> {{ category }} </strong> </li>
+      {% for genre in genres %}
+        <li> <strong> {{ genre }} </strong> </li>
       {% endfor %}
       </ul>
     </aside>
+    <section class="col-md-8">
+      <ul>
+      {% for item in latest_items %}
+        <li> {{ item }} </li>
+      {% endfor %}
+      </ul>
+    </section>
   </div>
+{% endblock %}

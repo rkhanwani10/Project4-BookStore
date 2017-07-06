@@ -14,6 +14,6 @@ class Book(Base):
     genre = Column(String)
     synopsis = Column(String)
 
-engine = create_engine('sqlite:///books.db')
+engine = create_engine('sqlite:///bookstore.db')
 
 Base.metadata.create_all(engine)
