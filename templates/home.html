@@ -3,15 +3,15 @@
   <div class="row">
     <aside class="col-md-4">
       <ul>
-      {% for genre in genres %}
-        <li> <strong> {{ genre }} </strong> </li>
+      {% for department in departments %}
+        <li> <strong> {{ department }} </strong> </li>
       {% endfor %}
       </ul>
     </aside>
     <section class="col-md-8">
       <ul>
-      {% for item in latest_items %}
-        <li> {{ item }} </li>
+      {% for patient in recently_admitted %}
+        <li> {{ patient }} </li>
       {% endfor %}
       </ul>
     </section>

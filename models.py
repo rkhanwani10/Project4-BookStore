@@ -1,19 +1,27 @@
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String, Date
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
 
 Base = declarative_base()
 
-class Book(Base):
-    __tablename__ = 'book'
+class Department(Base):
+    __tablename__ = 'departments'
 
-    isbn = Column(String, primary_key=True)
-    title = Column(String, nullable=False)
-    author = Column(String)
-    genre = Column(String)
-    synopsis = Column(String)
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
 
-engine = create_engine('sqlite:///bookstore.db')
+class Patient(Base):
+    __tablename__ = 'patients'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    age = Column(Integer)
+    notes = Column(String)
+    date_of_admission = Column(Date, nullable=False)
+    department_id = Column(Integer, ForeignKey('departments.id'))
+    department = relationship(Department)
+
+engine = create_engine('sqlite:///patientRecords.db')
 
 Base.metadata.create_all(engine)
