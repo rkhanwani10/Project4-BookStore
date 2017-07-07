@@ -20,12 +20,23 @@ def showDepartments():
         patients=recently_admitted)
 
 @app.route('/catalog/<department>/items')
-def showPatients(deparment):
+def showPatients(department):
     departments = session.query(Department).order_by(Department.department_name).all()
     joined = session.query(Patient).join(Patient.department)
     patients = joined.filter_by(department_name=department).all()
     return render_template('home.html', departments=departments,
         patients=patients)
+
+@app.route('/catalog/patient/new', methods=['GET','POST'])
+def newPatient():
+    if request.method == 'POST':
+        department_name = request.form['department_name']
+        department_id = session.query(Department).filter_by(department_name=department_name).with_entities(Department.id).one()
+        newPatient = Patient(name=request.form['name'], age=request.form['age'],
+            notes=request.form['notes'], date_of_admission=request.form['date_of_admission'], department_id=department_id)
+        session.add(newPatient)
+        session.commit()
+        return redirect(url_for('showPatients', department=department_name))
 
 if __name__ == '__main__':
     app.debug = True
