@@ -9,7 +9,7 @@ class Department(Base):
     __tablename__ = 'departments'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
+    department_name = Column(String, nullable=False)
 
 class Patient(Base):
     __tablename__ = 'patients'
