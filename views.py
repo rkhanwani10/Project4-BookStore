@@ -20,7 +20,7 @@ def showDepartments():
     return render_template('home.html', departments=departments,
         patients=recently_admitted)
 
-@app.route('/catalog/<department>/items')
+@app.route('/records/<department>/patients')
 def showPatients(department):
     departments = session.query(Department).order_by(Department.department_name).all()
     joined = session.query(Patient).join(Patient.department)
@@ -28,7 +28,7 @@ def showPatients(department):
     return render_template('home.html', departments=departments,
         patients=patients)
 
-@app.route('/catalog/patient/new', methods=['GET','POST'])
+@app.route('/records/patient/new', methods=['GET','POST'])
 def newPatient():
     if request.method == 'POST':
         department_name = request.form['department_name']
@@ -42,6 +42,20 @@ def newPatient():
         return redirect(url_for('showPatients', department=department_name))
     else:
         return render_template('newPatient.html')
+
+@app.route('/records/<int:patient_id>/delete', methods=['GET','POST'])
+def deletePatient(patient_id):
+    patient = session.query(Patient).filter_by(id=patient_id).one()
+    department_id = patient.department_id
+    department = session.query(Department).filter_by(id=department_id).one()
+    department_name = department.department_name
+    if request.method == 'POST':
+        session.delete(patient)
+        session.commit()
+        return redirect(url_for('showPatients', department=department_name))
+    else:
+        url = url_for('showPatients',department=department_name)
+        return render_template('deletePatient.html', patient_name=patient.name, url=url)
 
 if __name__ == '__main__':
     app.debug = True
