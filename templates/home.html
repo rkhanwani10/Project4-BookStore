@@ -4,14 +4,14 @@
     <aside class="col-md-4">
       <ul>
       {% for department in departments %}
-        <li> <strong> {{ department }} </strong> </li>
+        <li> <strong> {{ department.department_name }} </strong> </li>
       {% endfor %}
       </ul>
     </aside>
     <section class="col-md-8">
       <ul>
       {% for patient in patients %}
-        <li> {{ patient }} </li>
+        <li> {{ patient.name }} </li>
       {% endfor %}
       </ul>
     </section>

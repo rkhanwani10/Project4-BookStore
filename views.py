@@ -1,8 +1,9 @@
 from models import Base, Department, Patient
-from flask import Flask, render_template, jsonify, request, url_for, abort, g
+from flask import Flask, render_template, redirect, jsonify, request, url_for, abort, g
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy import create_engine, desc
+from datetime import datetime
 
 engine = create_engine('sqlite:///patientRecords.db')
 
@@ -31,12 +32,16 @@ def showPatients(department):
 def newPatient():
     if request.method == 'POST':
         department_name = request.form['department_name']
-        department_id = session.query(Department).filter_by(department_name=department_name).with_entities(Department.id).one()
-        newPatient = Patient(name=request.form['name'], age=request.form['age'],
-            notes=request.form['notes'], date_of_admission=request.form['date_of_admission'], department_id=department_id)
+        department = session.query(Department).filter_by(department_name=department_name).one()
+        date_of_admission = request.form['date_of_admission']
+        dt = datetime.strptime(date_of_admission, "%Y-%m-%d")
+        newPatient = Patient(name=request.form['name'], age=int(request.form['age']),
+            notes=request.form['notes'], date_of_admission=dt, department_id=department.id)
         session.add(newPatient)
         session.commit()
         return redirect(url_for('showPatients', department=department_name))
+    else:
+        return render_template('newPatient.html')
 
 if __name__ == '__main__':
     app.debug = True
