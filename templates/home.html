@@ -4,16 +4,23 @@
     <aside class="col-md-4">
       <ul>
       {% for department in departments %}
-        <li> <strong> {{ department.department_name }} </strong> </li>
+        <a href="{{url_for('showPatients',department=department.department_name)}}">
+          <div>{{ department.department_name }}</div>
+        </a>
+<!--         <li> <strong> {{ department.department_name }} </strong> </li> -->
       {% endfor %}
       </ul>
     </aside>
-    <section class="col-md-8">
+    <section class="col-md-7">
       <ul>
       {% for patient in patients %}
-        <li> {{ patient.name }} </li>
+        <a href="{{url_for('viewPatient',patient_id=patient.id)}}">
+          <div>{{ patient.name }}</div>
+        </a>
+        <!-- <li> {{ patient.name }} </li> -->
       {% endfor %}
       </ul>
     </section>
+    <a class="btn btn-primary" href="{{url_for('newPatient')}}">New</a>
   </div>
 {% endblock %}

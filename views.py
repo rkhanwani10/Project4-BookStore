@@ -83,6 +83,7 @@ def editPatient(patient_id):
         # ignored checking empty notes to enable removing notes from patient
         # records. Value set to patient's stored notes in html template
         patient.notes = request.form['notes']
+        session.commit()
         return redirect(url_for('viewPatient',patient_id=patient_id))
     else:
         return render_template('editPatient.html',patient=patient)
