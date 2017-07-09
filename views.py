@@ -28,6 +28,14 @@ def showPatients(department):
     return render_template('home.html', departments=departments,
         patients=patients)
 
+@app.route('/records/<int:patient_id>/')
+def viewPatient(patient_id):
+    patient = session.query(Patient).filter_by(id=patient_id).one()
+    department_id = patient.department_id
+    department = session.query(Department).filter_by(id=department_id).one()
+    department_name = department.department_name
+    return render_template('viewPatient.html', patient=patient, department_name=department_name)
+
 @app.route('/records/patient/new', methods=['GET','POST'])
 def newPatient():
     if request.method == 'POST':
@@ -56,6 +64,29 @@ def deletePatient(patient_id):
     else:
         url = url_for('showPatients',department=department_name)
         return render_template('deletePatient.html', patient_name=patient.name, url=url)
+
+@app.route('/records/<int:patient_id>/edit', methods=['GET','POST'])
+def editPatient(patient_id):
+    patient = session.query(Patient).filter_by(id=patient_id).one()
+    if request.method == 'POST':
+        if request.form['name']:
+            patient.name = request.form['name']
+        if request.form['age']:
+            patient.age = request.form['age']
+        if request.form['date_of_admission']:
+            dt = datetime.strptime(request.form['date_of_admission'], "%Y-%m-%d")
+            patient.date_of_admission = dt
+        if request.form['department_name']:
+            dep_name = request.form['department_name']
+            department = session.query(Department).filter_by(department_name=dep_name).one()
+            patient.department_id = department.id
+        # ignored checking empty notes to enable removing notes from patient
+        # records. Value set to patient's stored notes in html template
+        patient.notes = request.form['notes']
+        return redirect(url_for('viewPatient',patient_id=patient_id))
+    else:
+        return render_template('editPatient.html',patient=patient)
+
 
 if __name__ == '__main__':
     app.debug = True
