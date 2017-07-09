@@ -14,11 +14,19 @@ session = DBSession()
 app = Flask(__name__)
 
 @app.route('/')
+@app.route('/records')
 def showDepartments():
     departments = session.query(Department).order_by(Department.department_name).all()
     recently_admitted = session.query(Patient).order_by(desc(Patient.date_of_admission)).all()
     return render_template('home.html', departments=departments,
         patients=recently_admitted)
+
+@app.route('/records/<department>/patients.JSON')
+def showPatientsJSON(department):
+    departments = session.query(Department).order_by(Department.department_name).all()
+    joined = session.query(Patient).join(Patient.department)
+    patients = joined.filter_by(department_name=department).all()
+    return jsonify(patients=[patient.serialize for patient in patients])
 
 @app.route('/records/<department>/patients')
 def showPatients(department):
@@ -87,6 +95,7 @@ def editPatient(patient_id):
         return redirect(url_for('viewPatient',patient_id=patient_id))
     else:
         return render_template('editPatient.html',patient=patient)
+
 
 
 if __name__ == '__main__':

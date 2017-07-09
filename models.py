@@ -22,6 +22,16 @@ class Patient(Base):
     department_id = Column(Integer, ForeignKey('departments.id'))
     department = relationship(Department)
 
+    @property
+    def serialize(self):
+        return {
+            'name': self.name,
+            'age': self.age,
+            'date_of_admission': str(self.date_of_admission),
+            'department': self.department_id,
+            'notes': self.notes
+        }
+
 engine = create_engine('sqlite:///patientRecords.db')
 
 Base.metadata.create_all(engine)
