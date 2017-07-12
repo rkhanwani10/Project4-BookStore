@@ -1,9 +1,17 @@
-from models import Base, Department, Patient
-from flask import Flask, render_template, redirect, jsonify, request, url_for, abort, g
+from models import Base, Department, Patient, User
+from flask import Flask, render_template, redirect, jsonify, request, url_for, abort, g, make_response
+from flask.ext.httpauth import HTTPBasicAuth
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy import create_engine, desc
 from datetime import datetime
+from oauth2client.client import flow_from_clientsecrets
+from oauth2client.client import FlowExchangeError
+import httplib2
+import requests
+import json
+
+auth = HTTPBasicAuth()
 
 engine = create_engine('sqlite:///patientRecords.db')
 
@@ -12,6 +20,21 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
 app = Flask(__name__)
+
+CLIENT_ID = json.loads(open('client_secrets.json',r).read())['web']['client_id']
+
+@auth.verify_password
+def verify_password(username_or_token, password):
+    user_id = User.verify_auth_token(username_or_token)
+    if user_id is None:
+        user = session.query(User).filter_by(username=username_or_token).first()
+        if (user is None) or (not user.verify_password(password)):
+            return False
+    else:
+        user = session.query(User).filter_by(id=user_id).one()
+    g.user = user
+    return True
+
 
 @app.route('/')
 @app.route('/records')
