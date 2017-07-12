@@ -21,13 +21,6 @@ def showDepartments():
     return render_template('home.html', departments=departments,
         patients=recently_admitted)
 
-@app.route('/records/<department>/patients.JSON')
-def showPatientsJSON(department):
-    departments = session.query(Department).order_by(Department.department_name).all()
-    joined = session.query(Patient).join(Patient.department)
-    patients = joined.filter_by(department_name=department).all()
-    return jsonify(patients=[patient.serialize for patient in patients])
-
 @app.route('/records/<department>/patients')
 def showPatients(department):
     departments = session.query(Department).order_by(Department.department_name).all()
@@ -43,6 +36,27 @@ def viewPatient(patient_id):
     department = session.query(Department).filter_by(id=department_id).one()
     department_name = department.department_name
     return render_template('viewPatient.html', patient=patient, department_name=department_name)
+
+@app.route('/records/<department>/patients.JSON')
+def showDepartmentPatientsJSON(department):
+    departments = session.query(Department).order_by(Department.department_name).all()
+    joined = session.query(Patient).join(Patient.department)
+    patients = joined.filter_by(department_name=department).all()
+    patients_to_jsonify = []
+    for patient in patients:
+        patients_to_jsonify.append(patient.serialize(department))
+    return jsonify(patients=patients_to_jsonify)
+
+@app.route('/records/<name>.JSON')
+def viewPatientsJSON(name):
+    patients = session.query(Patient).filter_by(name=name).all()
+    patients_to_jsonify = []
+    for patient in patients:
+        department_id = patient.department_id
+        department = session.query(Department).filter_by(id=department_id).one()
+        department_name = department.department_name
+        patients_to_jsonify.append(patient.serialize(department_name))
+    return jsonify(patients=patients_to_jsonify)
 
 @app.route('/records/patient/new', methods=['GET','POST'])
 def newPatient():
@@ -95,8 +109,6 @@ def editPatient(patient_id):
         return redirect(url_for('viewPatient',patient_id=patient_id))
     else:
         return render_template('editPatient.html',patient=patient)
-
-
 
 if __name__ == '__main__':
     app.debug = True
