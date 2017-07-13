@@ -21,7 +21,7 @@ session = DBSession()
 
 app = Flask(__name__)
 
-CLIENT_ID = json.loads(open('client_secrets.json',r).read())['web']['client_id']
+CLIENT_ID = json.loads(open('client_secrets.json').read())['web']['client_id']
 
 @auth.verify_password
 def verify_password(username_or_token, password):
@@ -35,6 +35,27 @@ def verify_password(username_or_token, password):
     g.user = user
     return True
 
+@auth.login_required
+def get_auth_token():
+    token = g.user.generate_auth_token()
+    return jsonify({'token': token.decode('ascii')})
+
+@app.route('/users/new', methods=['POST'])
+def newUser():
+    username = request.json.get('username')
+    password = request.json.get('password')
+    check_existing = session.query(User).filter_by(username=username).first()
+    if username is None or password is None or check_existing is not None:
+        abort(400)
+    new_user = User(username=username)
+    new_user.hashPassword(password)
+    session.add(new_user)
+    session.commit()
+    return jsonify({'username': new_user.username}), 201
+
+@app.route('/login')
+def login():
+    return render_template('login.html')
 
 @app.route('/')
 @app.route('/records')

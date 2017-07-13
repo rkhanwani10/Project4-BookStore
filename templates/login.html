@@ -1,0 +1,74 @@
+{% extends "main.html" %}
+{% block head %}
+  <meta name="google-signin-client_id" content="341945468275-4512v8el2aj5kf4ko8u1v8ki2o203k3e.apps.googleusercontent.com">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js">
+  </script>
+  <script src="https://apis.google.com/js/client:platform.js">
+  </script>
+  <!-- <script>
+    auth2 = gapi.auth2.getAuthInstance();
+    console.log(auth2);
+  </script> -->
+  <script>
+  console.log("executed");
+    function start() {
+      console.log("in function");
+      gapi.load('auth2', function() {
+        auth2 = gapi.auth2.init({
+          client_id: '341945468275-4512v8el2aj5kf4ko8u1v8ki2o203k3e.apps.googleusercontent.com',
+          // Scopes to request in addition to 'profile' and 'email'
+          //scope: 'additional_scope'
+        });
+      });
+    }
+    start();
+  </script>
+{% endblock %}
+
+{% block content %}
+  <!-- <div class="g-signin2" -->
+  <button class="g-signin2" id="signinButton">Sign in with Google</button>
+  <script>
+    $('#signinButton').click(function() {
+      // signInCallback defined in step 6.
+      auth2.grantOfflineAccess().then(signInCallback);
+    });
+  </script>
+
+  <script>
+    function signInCallback(authResult) {
+      if (authResult['code']) {
+
+        // Hide the sign-in button now that the user is authorized, for example:
+        $('#signinButton').attr('style', 'display: none');
+
+        // Send the code to the server
+        $.ajax({
+          type: 'POST',
+          url: '/oauth/google',
+          // Always include an `X-Requested-With` header in every AJAX request,
+          // to protect against CSRF attacks.
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          processData: false,
+          data: authResult['code'],
+          contentType: 'application/octet-stream; charset=utf-8',
+          success: function(result) {
+            // Handle or verify the server response.
+            if (result) {
+              console.log("Login successful")
+              setTimeout(function() {
+              window.location.href = "/records";
+              }, 4000);
+            }
+          }
+          });
+      }
+      else {
+        // There was an error.
+        console.log("There was an error");
+      }
+    }
+  </script>
+{% endblock %}
