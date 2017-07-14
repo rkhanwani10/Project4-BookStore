@@ -16,6 +16,7 @@
       gapi.load('auth2', function() {
         auth2 = gapi.auth2.init({
           client_id: '341945468275-4512v8el2aj5kf4ko8u1v8ki2o203k3e.apps.googleusercontent.com',
+          redirect_uri: 'postmessage'
           // Scopes to request in addition to 'profile' and 'email'
           //scope: 'additional_scope'
         });
@@ -37,6 +38,7 @@
 
   <script>
     function signInCallback(authResult) {
+      console.log(authResult);
       if (authResult['code']) {
 
         // Hide the sign-in button now that the user is authorized, for example:
@@ -56,7 +58,7 @@
           contentType: 'application/octet-stream; charset=utf-8',
           success: function(result) {
             // Handle or verify the server response.
-            if (result) {
+            if (result['token']) {
               console.log("Login successful")
               setTimeout(function() {
               window.location.href = "/records";

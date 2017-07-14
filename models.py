@@ -14,6 +14,7 @@ class User(Base):
     __tablename__ = 'user'
     id = Column(Integer, primary_key=True)
     username = Column(String, index=True)
+    email = Column(String)
     password_hash = Column(String)
 
     def hash_password(self, password):

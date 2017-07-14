@@ -53,11 +53,64 @@ def newUser():
     session.commit()
     return jsonify({'username': new_user.username}), 201
 
+@app.route('/')
 @app.route('/login')
 def login():
     return render_template('login.html')
 
-@app.route('/')
+@app.route('/oauth/google', methods=['POST'])
+def gconnect():
+    # If this request does not have `X-Requested-With` header, this could be a CSRF
+    if not request.headers.get('X-Requested-With'):
+        abort(403)
+    auth_code = request.data
+    try:
+            # Upgrade the authorization code into a credentials object
+        oauth_flow = flow_from_clientsecrets('client_secrets.json', scope='')
+        oauth_flow.redirect_uri = 'postmessage'
+        credentials = oauth_flow.step2_exchange(auth_code)
+    except FlowExchangeError:
+        response = make_response(json.dumps('Failed to upgrade the authorization code.'), 401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    # Check that the access token is valid.
+    access_token = credentials.access_token
+    url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s' % access_token)
+    h = httplib2.Http()
+    result = json.loads(h.request(url, 'GET')[1])
+
+    # If there was an error in the access token info, abort.
+    if result.get('error') is not None:
+        response = make_response(json.dumps(result.get('error')), 500)
+        response.headers['Content-Type'] = 'application/json'
+    print result
+
+    #Get user info
+    h = httplib2.Http()
+    userinfo_url =  "https://www.googleapis.com/oauth2/v1/userinfo"
+    params = {'access_token': credentials.access_token, 'alt':'json'}
+    answer = requests.get(userinfo_url, params=params)
+
+    data = answer.json()
+
+    name = data['name']
+    email = data['email']
+
+    #see if user exists, if it doesn't make a new one
+    user = session.query(User).filter_by(email=email).first()
+    if not user:
+        user = User(username = name, email=email)
+        session.add(user)
+        session.commit()
+
+    #STEP 4 - Make token
+    token = user.generate_auth_token(600)
+
+    #STEP 5 - Send back token to the client
+    return jsonify({'token': token.decode('ascii')})
+
+@auth.login_required
 @app.route('/records')
 def showDepartments():
     departments = session.query(Department).order_by(Department.department_name).all()
@@ -65,6 +118,7 @@ def showDepartments():
     return render_template('home.html', departments=departments,
         patients=recently_admitted)
 
+@auth.login_required
 @app.route('/records/<department>/patients')
 def showPatients(department):
     departments = session.query(Department).order_by(Department.department_name).all()
@@ -73,6 +127,7 @@ def showPatients(department):
     return render_template('home.html', departments=departments,
         patients=patients)
 
+@auth.login_required
 @app.route('/records/<int:patient_id>/')
 def viewPatient(patient_id):
     patient = session.query(Patient).filter_by(id=patient_id).one()
@@ -81,6 +136,7 @@ def viewPatient(patient_id):
     department_name = department.department_name
     return render_template('viewPatient.html', patient=patient, department_name=department_name)
 
+@auth.login_required
 @app.route('/records/<department>/patients.JSON')
 def showDepartmentPatientsJSON(department):
     departments = session.query(Department).order_by(Department.department_name).all()
@@ -91,6 +147,7 @@ def showDepartmentPatientsJSON(department):
         patients_to_jsonify.append(patient.serialize(department))
     return jsonify(patients=patients_to_jsonify)
 
+@auth.login_required
 @app.route('/records/<name>.JSON')
 def viewPatientsJSON(name):
     patients = session.query(Patient).filter_by(name=name).all()
@@ -102,6 +159,7 @@ def viewPatientsJSON(name):
         patients_to_jsonify.append(patient.serialize(department_name))
     return jsonify(patients=patients_to_jsonify)
 
+@auth.login_required
 @app.route('/records/patient/new', methods=['GET','POST'])
 def newPatient():
     if request.method == 'POST':
@@ -117,6 +175,7 @@ def newPatient():
     else:
         return render_template('newPatient.html')
 
+@auth.login_required
 @app.route('/records/<int:patient_id>/delete', methods=['GET','POST'])
 def deletePatient(patient_id):
     patient = session.query(Patient).filter_by(id=patient_id).one()
@@ -131,6 +190,7 @@ def deletePatient(patient_id):
         url = url_for('showPatients',department=department_name)
         return render_template('deletePatient.html', patient_name=patient.name, url=url)
 
+@auth.login_required
 @app.route('/records/<int:patient_id>/edit', methods=['GET','POST'])
 def editPatient(patient_id):
     patient = session.query(Patient).filter_by(id=patient_id).one()
