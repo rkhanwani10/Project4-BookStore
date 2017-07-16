@@ -6,6 +6,16 @@
     </div>
   </section>
   <section class="details">
+    {% with messages = get_flashed_messages() %}
+         {% if messages %}
+            <li> {{ messages[-1] }}</li>
+            <!-- <ul>
+               {% for message in messages %}
+               <li>{{ message }}</li>
+               {% endfor %}
+            </ul> -->
+         {% endif %}
+      {% endwith %}
     <div class="row">
       <div class="col-md-2">
         <h3>Age: {{ patient.age }}</h3>

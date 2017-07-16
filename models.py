@@ -11,7 +11,7 @@ Base = declarative_base()
 secret_key = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in xrange(32))
 
 class User(Base):
-    __tablename__ = 'user'
+    __tablename__ = 'users'
     id = Column(Integer, primary_key=True)
     username = Column(String, index=True)
     email = Column(String)
@@ -55,6 +55,8 @@ class Patient(Base):
     date_of_admission = Column(Date, nullable=False)
     department_id = Column(Integer, ForeignKey('departments.id'))
     department = relationship(Department)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    user = relationship(User)
 
     def serialize(self, department):
         return {

@@ -47,7 +47,7 @@
         // Send the code to the server
         $.ajax({
           type: 'POST',
-          url: '/oauth/google',
+          url: '/oauth/google?state={{STATE}}',
           // Always include an `X-Requested-With` header in every AJAX request,
           // to protect against CSRF attacks.
           headers: {

@@ -1,5 +1,6 @@
 from models import Base, Department, Patient, User
-from flask import Flask, render_template, redirect, jsonify, request, url_for, abort, g, make_response
+from flask import Flask, render_template, redirect, jsonify, request, url_for, abort, g, make_response, flash
+from flask import session as login_session
 from flask.ext.httpauth import HTTPBasicAuth
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
@@ -10,6 +11,7 @@ from oauth2client.client import FlowExchangeError
 import httplib2
 import requests
 import json
+import random, string
 
 auth = HTTPBasicAuth()
 
@@ -56,16 +58,19 @@ def newUser():
 @app.route('/')
 @app.route('/login')
 def login():
-    return render_template('login.html')
+    state = ''.join(random.choice(string.ascii_uppercase + string.digits)
+                    for x in xrange(32))
+    login_session['state'] = state
+    return render_template('login.html',STATE=state)
 
 @app.route('/oauth/google', methods=['POST'])
 def gconnect():
     # If this request does not have `X-Requested-With` header, this could be a CSRF
-    if not request.headers.get('X-Requested-With'):
+    if (not request.headers.get('X-Requested-With')) or (request.args.get("state") != login_session['state']):
         abort(403)
     auth_code = request.data
     try:
-            # Upgrade the authorization code into a credentials object
+        # Upgrade the authorization code into a credentials object
         oauth_flow = flow_from_clientsecrets('client_secrets.json', scope='')
         oauth_flow.redirect_uri = 'postmessage'
         credentials = oauth_flow.step2_exchange(auth_code)
@@ -104,8 +109,10 @@ def gconnect():
         session.add(user)
         session.commit()
 
+    login_session['user'] = user
+
     #STEP 4 - Make token
-    token = user.generate_auth_token(600)
+    token = user.generate_auth_token()
 
     #STEP 5 - Send back token to the client
     return jsonify({'token': token.decode('ascii')})
@@ -168,7 +175,7 @@ def newPatient():
         date_of_admission = request.form['date_of_admission']
         dt = datetime.strptime(date_of_admission, "%Y-%m-%d")
         newPatient = Patient(name=request.form['name'], age=int(request.form['age']),
-            notes=request.form['notes'], date_of_admission=dt, department_id=department.id)
+            notes=request.form['notes'], date_of_admission=dt, department_id=department.id, user_id=login_session['user'].id)
         session.add(newPatient)
         session.commit()
         return redirect(url_for('showPatients', department=department_name))
@@ -179,6 +186,10 @@ def newPatient():
 @app.route('/records/<int:patient_id>/delete', methods=['GET','POST'])
 def deletePatient(patient_id):
     patient = session.query(Patient).filter_by(id=patient_id).one()
+    current_user_id = login_session['user'].id
+    if(current_user_id != patient.user_id):
+        flash('You are not authorized to delete this record')
+        return redirect(url_for('viewPatient', patient_id=patient_id))
     department_id = patient.department_id
     department = session.query(Department).filter_by(id=department_id).one()
     department_name = department.department_name
@@ -194,6 +205,10 @@ def deletePatient(patient_id):
 @app.route('/records/<int:patient_id>/edit', methods=['GET','POST'])
 def editPatient(patient_id):
     patient = session.query(Patient).filter_by(id=patient_id).one()
+     current_user_id = login_session['user'].id
+    if(current_user_id != patient.user_id):
+        flash('You are not authorized to delete this record')
+        return redirect(url_for('viewPatient', patient_id=patient_id))
     if request.method == 'POST':
         if request.form['name']:
             patient.name = request.form['name']
@@ -207,7 +222,7 @@ def editPatient(patient_id):
             department = session.query(Department).filter_by(department_name=dep_name).one()
             patient.department_id = department.id
         # ignored checking empty notes to enable removing notes from patient
-        # records. Value set to patient's stored notes in html template
+        # records. Default value set to patient's stored notes in html template
         patient.notes = request.form['notes']
         session.commit()
         return redirect(url_for('viewPatient',patient_id=patient_id))
@@ -215,5 +230,6 @@ def editPatient(patient_id):
         return render_template('editPatient.html',patient=patient)
 
 if __name__ == '__main__':
+    app.secret_key = 'super_secret_key'
     app.debug = True
     app.run(host='0.0.0.0', port=8000)
