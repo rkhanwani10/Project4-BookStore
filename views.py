@@ -146,9 +146,7 @@ def gdisconnect():
         del login_session['user_id']
         del login_session['state']
 
-        response = make_response(json.dumps('Successfully disconnected.'), 200)
-        response.headers['Content-Type'] = 'application/json'
-        return response
+        return redirect(url_for('login'))
     else:
         # For whatever reason, the given token was invalid.
         response = make_response(

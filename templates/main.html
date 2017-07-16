@@ -9,6 +9,18 @@
   </head>
   <body>
     <div class="container">
+      <header class="row page-header text-center">
+        <div class="col-md-2">
+          <h1><span style="margin-top:15px;" class="glyphicon glyphicon-plus"></span></h1>
+        </div>
+        <div class="col-md-7">
+          <h1> NPHD <br> <small>National Patient Healthcare Database</small></h1>
+        </div>
+        <div class="col-md-3">
+          {% block login_button %}
+          {% endblock %}
+        </div>
+      </header>
       {% block content %}
       {% endblock %}
     </div>

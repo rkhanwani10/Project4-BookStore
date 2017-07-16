@@ -1,4 +1,7 @@
 {% extends "main.html" %}
+{% block login_button %}
+  <a class="btn btn-danger" style="margin-top:30px;" href="{{url_for('gdisconnect')}}">Sign Out</a>
+{% endblock %}
 {% block content %}
   <div class="row">
     <aside class="col-md-4">
