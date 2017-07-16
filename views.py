@@ -55,12 +55,14 @@ def newUser():
     session.commit()
     return jsonify({'username': new_user.username}), 201
 
-@app.route('/')
 @app.route('/login')
 def login():
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
                     for x in xrange(32))
+    if login_session.get('state') is not None:
+        del login_session['state']
     login_session['state'] = state
+    print login_session
     return render_template('login.html',STATE=state)
 
 @app.route('/oauth/google', methods=['POST'])
@@ -74,6 +76,9 @@ def gconnect():
         oauth_flow = flow_from_clientsecrets('client_secrets.json', scope='')
         oauth_flow.redirect_uri = 'postmessage'
         credentials = oauth_flow.step2_exchange(auth_code)
+        if login_session.get('credentials') is not None:
+            del login_session['credentials']
+        login_session['credentials'] = credentials
     except FlowExchangeError:
         response = make_response(json.dumps('Failed to upgrade the authorization code.'), 401)
         response.headers['Content-Type'] = 'application/json'
@@ -89,7 +94,6 @@ def gconnect():
     if result.get('error') is not None:
         response = make_response(json.dumps(result.get('error')), 500)
         response.headers['Content-Type'] = 'application/json'
-    print result
 
     #Get user info
     h = httplib2.Http()
@@ -109,17 +113,56 @@ def gconnect():
         session.add(user)
         session.commit()
 
-    login_session['user'] = user
+    if login_session.get('user_id') is not None:
+        del login_session['user_id']
+    login_session['user_id'] = user.id
 
     #STEP 4 - Make token
     token = user.generate_auth_token()
 
+    print login_session
     #STEP 5 - Send back token to the client
     return jsonify({'token': token.decode('ascii')})
 
+@app.route('/gdisconnect')
+def gdisconnect():
+    # Only disconnect a connected user.
+    print login_session
+    credentials = login_session.get('credentials')
+    if credentials is None:
+        response = make_response(
+            json.dumps('Current user not connected.'), 401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+    access_token = credentials.access_token
+    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % access_token
+    h = httplib2.Http()
+    result = h.request(url, 'GET')[0]
+
+
+    if result['status'] == '200':
+        # Reset the user's sesson.
+        del login_session['credentials']
+        del login_session['user_id']
+        del login_session['state']
+
+        response = make_response(json.dumps('Successfully disconnected.'), 200)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+    else:
+        # For whatever reason, the given token was invalid.
+        response = make_response(
+            json.dumps('Failed to revoke token for given user.', 400))
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
 @auth.login_required
+@app.route('/')
 @app.route('/records')
 def showDepartments():
+    print login_session
+    if login_session.get('credentials') == None:
+        return redirect(url_for('login'))
     departments = session.query(Department).order_by(Department.department_name).all()
     recently_admitted = session.query(Patient).order_by(desc(Patient.date_of_admission)).all()
     return render_template('home.html', departments=departments,
@@ -175,7 +218,7 @@ def newPatient():
         date_of_admission = request.form['date_of_admission']
         dt = datetime.strptime(date_of_admission, "%Y-%m-%d")
         newPatient = Patient(name=request.form['name'], age=int(request.form['age']),
-            notes=request.form['notes'], date_of_admission=dt, department_id=department.id, user_id=login_session['user'].id)
+            notes=request.form['notes'], date_of_admission=dt, department_id=department.id, user_id=login_session['user_id'])
         session.add(newPatient)
         session.commit()
         return redirect(url_for('showPatients', department=department_name))
@@ -186,7 +229,7 @@ def newPatient():
 @app.route('/records/<int:patient_id>/delete', methods=['GET','POST'])
 def deletePatient(patient_id):
     patient = session.query(Patient).filter_by(id=patient_id).one()
-    current_user_id = login_session['user'].id
+    current_user_id = login_session['user_id']
     if(current_user_id != patient.user_id):
         flash('You are not authorized to delete this record')
         return redirect(url_for('viewPatient', patient_id=patient_id))
@@ -205,7 +248,7 @@ def deletePatient(patient_id):
 @app.route('/records/<int:patient_id>/edit', methods=['GET','POST'])
 def editPatient(patient_id):
     patient = session.query(Patient).filter_by(id=patient_id).one()
-     current_user_id = login_session['user'].id
+    current_user_id = login_session['user_id']
     if(current_user_id != patient.user_id):
         flash('You are not authorized to delete this record')
         return redirect(url_for('viewPatient', patient_id=patient_id))
