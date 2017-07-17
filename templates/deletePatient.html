@@ -1,7 +1,15 @@
 {% extends "main.html" %}
 {% block content %}
-  <h2>Are you sure you want to delete {{ patient_name }}'s records?</h2>
-  <form action="#" method="post">
-    <button type="submit" class="btn btn-danger">Delete</button>
-  </form>
+  <div class="row">
+    <div class="col-md-12 text-center">
+      <h2>Are you sure you want to delete {{ patient_name }}'s records?</h2>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-12 text-center">
+      <form action="#" method="post">
+        <button type="submit" class="btn btn-danger">Delete</button>
+      </form>
+    </div>
+  </div>
 {% endblock %}

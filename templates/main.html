@@ -4,7 +4,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://apis.google.com/js/client:platform.js"></script>
     <meta charset="utf-8">
+    <script>
+    function start() {
+      gapi.load('auth2', function() {
+        auth2 = gapi.auth2.init({
+          client_id: '341945468275-4512v8el2aj5kf4ko8u1v8ki2o203k3e.apps.googleusercontent.com',
+          redirect_uri: 'postmessage'
+          // Scopes to request in addition to 'profile' and 'email'
+          //scope: 'additional_scope'
+        });
+      });
+    }
+    start();
+  </script>
     {% block head %}
     {% endblock %}
   </head>

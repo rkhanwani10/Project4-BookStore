@@ -1,6 +1,15 @@
 {% extends "main.html" %}
 {% block login_button %}
-  <a class="btn btn-danger" style="margin-top:30px;" href="{{url_for('gdisconnect')}}">Sign Out</a>
+  <a class="btn btn-danger" style="margin-top:30px;" href="/gdisconnect" onclick="signOut();">Sign Out</a>
+  <script>
+    function signOut() {
+      var auth2 = gapi.auth2.getAuthInstance();
+      auth2.signOut().then(function () {
+        auth2.disconnect();
+        console.log('User signed out.');
+      });
+    }
+  </script>
 {% endblock %}
 {% block content %}
   <section class="row">
@@ -21,7 +30,7 @@
   <section class="details text-center">
     {% with messages = get_flashed_messages() %}
          {% if messages %}
-            <li> {{ messages[-1] }}</li>
+            <li class="alert alert-danger"> {{ messages[-1] }}</li>
             <!-- <ul>
                {% for message in messages %}
                <li>{{ message }}</li>

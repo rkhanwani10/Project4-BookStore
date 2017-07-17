@@ -131,59 +131,66 @@ def gdisconnect():
             json.dumps('Current user not connected.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
-    access_token = credentials.access_token
-    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % access_token
     h = httplib2.Http()
-    result = h.request(url, 'GET')[0]
+    credentials.revoke(h)
+    # access_token = credentials.access_token
+    # url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % access_token
+    # result = h.request(url, 'GET')[0]
 
 
-    if result['status'] == '200':
-        # Reset the user's sesson.
-        del login_session['credentials']
-        del login_session['user_id']
-        del login_session['state']
+    # if result['status'] == '200':
+    #     # Reset the user's sesson.
+    del login_session['credentials']
+    del login_session['user_id']
+    del login_session['state']
 
-        return redirect(url_for('login'))
-    else:
-        # For whatever reason, the given token was invalid.
-        print result
-        response = make_response(
-            json.dumps('Failed to revoke token for given user.', 400))
-        response.headers['Content-Type'] = 'application/json'
-        return response
+    return redirect(url_for('login'))
+    # else:
+    #     # For whatever reason, the given token was invalid.
+    #     print result
+    #     response = make_response(
+    #         json.dumps('Failed to revoke token for given user.', 400))
+    #     response.headers['Content-Type'] = 'application/json'
+    #     return response
 
-@auth.login_required
 @app.route('/')
 @app.route('/records')
+# @auth.login_required
 def showDepartments():
-    if login_session.get('credentials') == None:
+    if login_session.get('credentials') is None:
         return redirect(url_for('login'))
     departments = session.query(Department).order_by(Department.department_name).all()
     recently_admitted = session.query(Patient).order_by(desc(Patient.date_of_admission)).all()
     return render_template('home.html', departments=departments,
         patients=recently_admitted, active="recent_admits")
 
-@auth.login_required
 @app.route('/records/<department>/patients')
+# @auth.login_required
 def showPatients(department):
+    if login_session.get('credentials') is None:
+        return redirect(url_for('login'))
     departments = session.query(Department).order_by(Department.department_name).all()
     joined = session.query(Patient).join(Patient.department)
     patients = joined.filter_by(department_name=department).order_by(Patient.name).all()
     return render_template('home.html', departments=departments,
         patients=patients, active=department.replace(' ',''))
 
-@auth.login_required
 @app.route('/records/<int:patient_id>/')
+# @auth.login_required
 def viewPatient(patient_id):
+    if login_session.get('credentials') is None:
+        return redirect(url_for('login'))
     patient = session.query(Patient).filter_by(id=patient_id).one()
     department_id = patient.department_id
     department = session.query(Department).filter_by(id=department_id).one()
     department_name = department.department_name
     return render_template('viewPatient.html', patient=patient, department_name=department_name)
 
-@auth.login_required
 @app.route('/records/<department>/patients.JSON')
+# @auth.login_required
 def showDepartmentPatientsJSON(department):
+    if login_session.get('credentials') is None:
+        return redirect(url_for('login'))
     departments = session.query(Department).order_by(Department.department_name).all()
     joined = session.query(Patient).join(Patient.department)
     patients = joined.filter_by(department_name=department).all()
@@ -192,9 +199,11 @@ def showDepartmentPatientsJSON(department):
         patients_to_jsonify.append(patient.serialize(department))
     return jsonify(patients=patients_to_jsonify)
 
-@auth.login_required
 @app.route('/records/<name>.JSON')
+# @auth.login_required
 def viewPatientsJSON(name):
+    if login_session.get('credentials') is None:
+        return redirect(url_for('login'))
     patients = session.query(Patient).filter_by(name=name).all()
     patients_to_jsonify = []
     for patient in patients:
@@ -204,9 +213,11 @@ def viewPatientsJSON(name):
         patients_to_jsonify.append(patient.serialize(department_name))
     return jsonify(patients=patients_to_jsonify)
 
-@auth.login_required
 @app.route('/records/patient/new', methods=['GET','POST'])
+# @auth.login_required
 def newPatient():
+    if login_session.get('credentials') is None:
+        return redirect(url_for('login'))
     if request.method == 'POST':
         department_name = request.form['department_name']
         department = session.query(Department).filter_by(department_name=department_name).one()
@@ -220,9 +231,11 @@ def newPatient():
     else:
         return render_template('newPatient.html')
 
-@auth.login_required
 @app.route('/records/<int:patient_id>/delete', methods=['GET','POST'])
+# @auth.login_required
 def deletePatient(patient_id):
+    if login_session.get('credentials') is None:
+        return redirect(url_for('login'))
     patient = session.query(Patient).filter_by(id=patient_id).one()
     current_user_id = login_session['user_id']
     if(current_user_id != patient.user_id):
@@ -239,13 +252,15 @@ def deletePatient(patient_id):
         url = url_for('showPatients',department=department_name)
         return render_template('deletePatient.html', patient_name=patient.name, url=url)
 
-@auth.login_required
 @app.route('/records/<int:patient_id>/edit', methods=['GET','POST'])
+# @auth.login_required
 def editPatient(patient_id):
+    if login_session.get('credentials') is None:
+        return redirect(url_for('login'))
     patient = session.query(Patient).filter_by(id=patient_id).one()
     current_user_id = login_session['user_id']
     if(current_user_id != patient.user_id):
-        flash('You are not authorized to delete this record')
+        flash('You are not authorized to edit this record')
         return redirect(url_for('viewPatient', patient_id=patient_id))
     if request.method == 'POST':
         if request.form['name']:
