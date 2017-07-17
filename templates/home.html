@@ -5,16 +5,21 @@
 {% block content %}
   <div class="row">
     <aside class="col-md-4">
-      <ul>
+      <ul class="nav nav-pills nav-stacked">
+        <li id="recent_admits" class="active">
+          <a href="{{url_for('showDepartments')}}">Recent Admits</a>
+        </li>
       {% for department in departments %}
-        <a href="{{url_for('showPatients',department=department.department_name)}}">
-          <div>{{ department.department_name }}</div>
-        </a>
+        <li id="{{(department.department_name).replace(' ','')}}">
+          <a href="{{url_for('showPatients',department=department.department_name)}}">
+            {{ department.department_name }}
+          </a>
+        </li>
 <!--         <li> <strong> {{ department.department_name }} </strong> </li> -->
       {% endfor %}
       </ul>
     </aside>
-    <section class="col-md-7">
+    <section class="col-md-6">
       <ul>
       {% for patient in patients %}
         <a href="{{url_for('viewPatient',patient_id=patient.id)}}">
@@ -24,6 +29,12 @@
       {% endfor %}
       </ul>
     </section>
-    <a class="btn btn-primary" href="{{url_for('newPatient')}}">New</a>
+    <div class="col-md-2 text-right">
+      <a class="btn btn-primary" href="{{url_for('newPatient')}}">New Admit</a>
+    </div>
   </div>
+  <script>
+    $('#{{active}}').siblings().removeClass('active');
+    $('#{{active}}').addClass('active');
+  </script>
 {% endblock %}

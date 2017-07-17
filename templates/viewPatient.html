@@ -1,11 +1,24 @@
 {% extends "main.html" %}
+{% block login_button %}
+  <a class="btn btn-danger" style="margin-top:30px;" href="{{url_for('gdisconnect')}}">Sign Out</a>
+{% endblock %}
 {% block content %}
   <section class="row">
-    <div class="col-md-12">
+    <div class="col-md-12 text-center">
       <h1>{{ patient.name }}</h1>
     </div>
   </section>
-  <section class="details">
+  <section class="row text-center">
+    <div class="col-md-12">
+      <a class="btn btn-primary" href="{{url_for('editPatient',patient_id=patient.id)}}">
+        <span class="glyphicon glyphicon-pencil"></span>  Edit
+      </a>
+      <a class="btn btn-danger" href="{{url_for('deletePatient',patient_id=patient.id)}}">
+        <span class="glyphicon glyphicon-trash"></span>  Delete
+      </a>
+    </div>
+  </section>
+  <section class="details text-center">
     {% with messages = get_flashed_messages() %}
          {% if messages %}
             <li> {{ messages[-1] }}</li>
@@ -18,30 +31,19 @@
       {% endwith %}
     <div class="row">
       <div class="col-md-2">
-        <h3>Age: {{ patient.age }}</h3>
+        <h3>Age <br> <small>{{ patient.age }}</small></h3>
       </div>
-      <div class="col-md-5">
-        <h3>Date of Admission: {{ patient.date_of_admission }}</h3>
+      <div class="col-md-8">
+        <h3>Date of Admission <br> <small> {{ patient.date_of_admission }} </small></h3>
       </div>
-      <div class="col-md-5">
-        <h3>Department: {{ department_name }}</h3>
+      <div class="col-md-2">
+        <h3>Department <br> <small> {{ department_name }} </small> </h3>
       </div>
     </div>
     <div class="row">
-      <div class="col-md-2">
-        <h3>Notes</h3>
+      <div class="col-md-12">
+        <h3>Notes <br> <small> {{ patient.notes }} </small></h3>
       </div>
-      <div class="col-md-10">
-        <p>{{ patient.notes }}</p>
-      </div>
-    </div>
-  </section>
-  <section class="row">
-    <div class="col-md-12">
-      <a class="btn btn-primary" href="{{url_for('editPatient',patient_id=patient.id)}}">Edit
-      </a>
-      <a class="btn btn-danger" href="{{url_for('deletePatient',patient_id=patient.id)}}">Delete
-      </a>
     </div>
   </section>
 {% endblock %}

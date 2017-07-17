@@ -62,7 +62,6 @@ def login():
     if login_session.get('state') is not None:
         del login_session['state']
     login_session['state'] = state
-    print login_session
     return render_template('login.html',STATE=state)
 
 @app.route('/oauth/google', methods=['POST'])
@@ -120,14 +119,12 @@ def gconnect():
     #STEP 4 - Make token
     token = user.generate_auth_token()
 
-    print login_session
     #STEP 5 - Send back token to the client
     return jsonify({'token': token.decode('ascii')})
 
 @app.route('/gdisconnect')
 def gdisconnect():
     # Only disconnect a connected user.
-    print login_session
     credentials = login_session.get('credentials')
     if credentials is None:
         response = make_response(
@@ -149,6 +146,7 @@ def gdisconnect():
         return redirect(url_for('login'))
     else:
         # For whatever reason, the given token was invalid.
+        print result
         response = make_response(
             json.dumps('Failed to revoke token for given user.', 400))
         response.headers['Content-Type'] = 'application/json'
@@ -158,22 +156,21 @@ def gdisconnect():
 @app.route('/')
 @app.route('/records')
 def showDepartments():
-    print login_session
     if login_session.get('credentials') == None:
         return redirect(url_for('login'))
     departments = session.query(Department).order_by(Department.department_name).all()
     recently_admitted = session.query(Patient).order_by(desc(Patient.date_of_admission)).all()
     return render_template('home.html', departments=departments,
-        patients=recently_admitted)
+        patients=recently_admitted, active="recent_admits")
 
 @auth.login_required
 @app.route('/records/<department>/patients')
 def showPatients(department):
     departments = session.query(Department).order_by(Department.department_name).all()
     joined = session.query(Patient).join(Patient.department)
-    patients = joined.filter_by(department_name=department).all()
+    patients = joined.filter_by(department_name=department).order_by(Patient.name).all()
     return render_template('home.html', departments=departments,
-        patients=patients)
+        patients=patients, active=department.replace(' ',''))
 
 @auth.login_required
 @app.route('/records/<int:patient_id>/')
