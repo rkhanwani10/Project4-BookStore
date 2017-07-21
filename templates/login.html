@@ -1,27 +1,6 @@
 {% extends "main.html" %}
 {% block head %}
   <meta name="google-signin-client_id" content="341945468275-4512v8el2aj5kf4ko8u1v8ki2o203k3e.apps.googleusercontent.com">
-<!--   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js">
-  </script> -->
-  <!-- <script src="https://apis.google.com/js/client:platform.js">
-  </script> -->
-  <!-- <script>
-    auth2 = gapi.auth2.getAuthInstance();
-    console.log(auth2);
-  </script> -->
-  <!-- <script>
-    function start() {
-      gapi.load('auth2', function() {
-        auth2 = gapi.auth2.init({
-          client_id: '341945468275-4512v8el2aj5kf4ko8u1v8ki2o203k3e.apps.googleusercontent.com',
-          redirect_uri: 'postmessage'
-          // Scopes to request in addition to 'profile' and 'email'
-          //scope: 'additional_scope'
-        });
-      });
-    }
-    start();
-  </script> -->
 {% endblock %}
 
 {% block login_button %}
@@ -43,15 +22,13 @@
     function signInCallback(authResult) {
       if (authResult['code']) {
 
-        // Hide the sign-in button now that the user is authorized, for example:
+        // Hide the sign-in button now that the user is authorized
         $('#signinButton').attr('style', 'display: none');
 
         // Send the code to the server
         $.ajax({
           type: 'POST',
           url: '/oauth/google?state={{STATE}}',
-          // Always include an `X-Requested-With` header in every AJAX request,
-          // to protect against CSRF attacks.
           headers: {
             'X-Requested-With': 'XMLHttpRequest'
           },
@@ -62,11 +39,9 @@
           },
           contentType: 'application/octet-stream; charset=utf-8',
           success: function(result) {
-            // Handle or verify the server response.
+            // Handle the server response.
             if (result['token']) {
-              // setTimeout(function() {
               window.location.href = "/records";
-              // }, 5000);
             }
           }
           });

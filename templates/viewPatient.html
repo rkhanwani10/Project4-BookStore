@@ -34,11 +34,6 @@
     {% with messages = get_flashed_messages() %}
          {% if messages %}
             <li class="alert alert-danger"> {{ messages[-1] }}</li>
-            <!-- <ul>
-               {% for message in messages %}
-               <li>{{ message }}</li>
-               {% endfor %}
-            </ul> -->
          {% endif %}
       {% endwith %}
     <div class="row">
