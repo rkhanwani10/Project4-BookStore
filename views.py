@@ -191,11 +191,15 @@ def viewPatient(patient_id):
     if login_session.get('credentials') is None:
         return redirect(url_for('login'))
     patient = session.query(Patient).filter_by(id=patient_id).one()
+    creator_id = patient.user_id
+    hospital = session.query(User).filter_by(id=creator_id).one()
+    hospital_name = hospital.username
     department_id = patient.department_id
     department = session.query(Department).filter_by(id=department_id).one()
     department_name = department.department_name
     return render_template('viewPatient.html', patient=patient,
-                           department_name=department_name)
+                           department_name=department_name,
+                           hospital_name=hospital_name)
 
 
 @app.route('/records/<department>/patients.JSON')
@@ -206,7 +210,11 @@ def showDepartmentPatientsJSON(department):
     patients = joined.filter_by(department_name=department).all()
     patients_to_jsonify = []
     for patient in patients:
-        patients_to_jsonify.append(patient.serialize(department))
+        hospital_id = patient.user_id
+        hospital = session.query(User).filter_by(id=hospital_id).one()
+        hospital_name = hospital.username
+        serialized_patient = patient.serialize(department, hospital_name)
+        patients_to_jsonify.append(serialized_patient)
     return jsonify(patients=patients_to_jsonify)
 
 
@@ -219,7 +227,11 @@ def viewPatientsJSON(name):
         departments_query = session.query(Department)
         department = departments_query.filter_by(id=department_id).one()
         department_name = department.department_name
-        patients_to_jsonify.append(patient.serialize(department_name))
+        hospital_id = patient.user_id
+        hospital = session.query(User).filter_by(id=hospital_id).one()
+        hospital_name = hospital.username
+        serialized_patient = patient.serialize(department_name, hospital_name)
+        patients_to_jsonify.append(serialized_patient)
     return jsonify(patients=patients_to_jsonify)
 
 
@@ -229,7 +241,11 @@ def viewPatientJSON(patient_id):
     department_id = patient.department_id
     department = session.query(Department).filter_by(id=department_id).one()
     department_name = department.department_name
-    return jsonify(patient.serialize(department_name))
+    hospital_id = patient.user_id
+    hospital = session.query(User).filter_by(id=hospital_id).one()
+    hospital_name = hospital.username
+    serialized_patient = patient.serialize(department_name, hospital_name)
+    return jsonify(patient.serialize(department_name, hospital_name))
 
 
 @app.route('/records/patient/new', methods=['GET', 'POST'])

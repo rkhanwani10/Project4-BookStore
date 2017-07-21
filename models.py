@@ -3,12 +3,18 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
 from passlib.apps import custom_app_context as pwd_context
-import random, string
-from itsdangerous import (TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired)
+import random
+import string
+from itsdangerous import (TimedJSONWebSignatureSerializer as Serializer,
+                          BadSignature, SignatureExpired)
 
 Base = declarative_base()
 
-secret_key = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in xrange(32))
+randoms = []
+for x in xrange(32):
+    randoms.append(random.choice(string.ascii_uppercase + string.digits))
+secret_key = ''.join(randoms)
+
 
 class User(Base):
     __tablename__ = 'users'
@@ -24,7 +30,7 @@ class User(Base):
         return pwd_context.verify(password, self.password_hash)
 
     def generate_auth_token(self, expiration=10):
-        s = Serializer(secret_key,expiration)
+        s = Serializer(secret_key, expiration)
         return s.dumps({'id': self.id})
 
     @staticmethod
@@ -39,11 +45,13 @@ class User(Base):
         user_id = data['id']
         return user_id
 
+
 class Department(Base):
     __tablename__ = 'departments'
 
     id = Column(Integer, primary_key=True)
     department_name = Column(String, nullable=False)
+
 
 class Patient(Base):
     __tablename__ = 'patients'
@@ -58,12 +66,13 @@ class Patient(Base):
     user_id = Column(Integer, ForeignKey('users.id'))
     user = relationship(User)
 
-    def serialize(self, department):
+    def serialize(self, department, hospital):
         return {
             'name': self.name,
             'age': self.age,
             'date_of_admission': str(self.date_of_admission),
             'department': department,
+            'hospital': hospital,
             'notes': self.notes
         }
 
