@@ -200,8 +200,6 @@ def viewPatient(patient_id):
 
 @app.route('/records/<department>/patients.JSON')
 def showDepartmentPatientsJSON(department):
-    # if login_session.get('credentials') is None:
-    #     return redirect(url_for('login'))
     departments_query = session.query(Department)
     departments = departments_query.order_by(Department.department_name).all()
     joined = session.query(Patient).join(Patient.department)
@@ -214,8 +212,6 @@ def showDepartmentPatientsJSON(department):
 
 @app.route('/records/<name>.JSON')
 def viewPatientsJSON(name):
-    # if login_session.get('credentials') is None:
-    #     return redirect(url_for('login'))
     patients = session.query(Patient).filter_by(name=name).all()
     patients_to_jsonify = []
     for patient in patients:
@@ -282,7 +278,6 @@ def deletePatient(patient_id):
 
 
 @app.route('/records/<int:patient_id>/edit', methods=['GET', 'POST'])
-# @auth.login_required
 def editPatient(patient_id):
     if login_session.get('credentials') is None:
         return redirect(url_for('login'))

@@ -1,4 +1,19 @@
 {% extends "main.html" %}
+{% block home_button %}
+  <a class="btn btn-primary" style="margin-top:30px;" href="/">Home</a>
+{% endblock %}
+{% block login_button %}
+  <a class="btn btn-danger" style="margin-top:30px;" href="/gdisconnect" onclick="signOut();">Sign Out</a>
+  <script>
+    function signOut() {
+      var auth2 = gapi.auth2.getAuthInstance();
+      auth2.signOut().then(function () {
+        auth2.disconnect();
+        console.log('User signed out.');
+      });
+    }
+  </script>
+{% endblock %}
 {% block content %}
   <div class="row">
     <div class="col-md-12 text-center">

@@ -1,4 +1,7 @@
 {% extends "main.html" %}
+{% block home_button %}
+  <a class="btn btn-primary" style="margin-top:30px;" href="/">Home</a>
+{% endblock %}
 {% block login_button %}
   <a class="btn btn-danger" style="margin-top:30px;" href="/gdisconnect" onclick="signOut();">Sign Out</a>
   <script>
