@@ -1,4 +1,4 @@
-# Logs Analysis Project
+# NPHD Project
 Python source code for an **example National Patient HealthCare Database** that will act as a centralized patient database for all hospitals to accomodate **easier access to patient records at different hospitals** and allow people to **consult specialists at different hospitals with ease.**
 
 ### Installation
